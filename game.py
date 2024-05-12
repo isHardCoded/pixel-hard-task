@@ -2,8 +2,8 @@ import pygame
 import sys
 import random
 
-WIDTH, HEIGHT = 800, 600
-BLOCK_SIZE = 10
+WIDTH, HEIGHT = 1200, 800
+BLOCK_SIZE = 30
 WALL_BLOCKS = 3
 GAME_TITLE = "Snake"
 INITIAL_GAME_SPEED = 10
@@ -16,6 +16,8 @@ APPLE_COLOR = (167, 0, 0)
 SNAKE_COLOR = (138, 222, 46)
 SNAKE_RADIUS = BLOCK_SIZE // 4
 APPLE_RADIUS = BLOCK_SIZE // 2
+WALL_COLOR = (31, 31, 31)
+TEXT_COLOR = (255, 255, 255)
 
 def main():
     screen, clock = initialize_pygame()
@@ -74,7 +76,7 @@ def get_events():
 
 def update_game_state(events, game_state):
     check_key_presses(events, game_state)
-    if game_state["game_running"]:
+    if game_state["game_running"] and not game_state["game_paused"]:
         move_snake(game_state)
         check_collisions(game_state)
         check_apple_consumption(game_state)
@@ -94,12 +96,17 @@ def check_collisions(game_state):
     ): game_state["game_running"] = False
 
 def check_apple_consumption(game_state):
+    apples_eaten = 0
     for apple in game_state["apples"]:
         if apple == game_state["snake"][0]:
             game_state["apples"].remove(apple)
             place_apples(1, game_state)
             game_state["score"] += 1
+            apples_eaten += 1
             game_state["game_speed"] = game_state["game_speed"] * 1.1
+
+    if apples_eaten == 0:
+        game_state["snake"].pop()
 
 def check_key_presses(events, game_state):
     if "quit" in events:
@@ -173,15 +180,26 @@ def draw_apples(screen, apples):
     for apple in apples:
         x = apple[0] * BLOCK_SIZE + WALL_BLOCKS * BLOCK_SIZE
         y = apple[1] * BLOCK_SIZE + WALL_BLOCKS * BLOCK_SIZE
-
         rect = ((x, y), (BLOCK_SIZE, BLOCK_SIZE))
         pygame.draw.rect(screen, APPLE_COLOR, rect, border_radius = APPLE_RADIUS)
 
 def print_new_game_message(screen):
-    pass
+    font = pygame.font.SysFont("Courier New", 20, bold=True)
+    text = font.render("Press ENTER to start game", True, TEXT_COLOR)
+    text_rect = text.get_rect()
+    text_rect.center = (WIDTH // 2, HEIGHT // 2)
+    screen.blit(text, text_rect)
 
 def print_game_paused_message(screen):
-    pass
+    font = pygame.font.SysFont("Courier New", 20, bold=True)
+    text1 = font.render("Press SPACE to continue", True, TEXT_COLOR)
+    text2 = font.render("Press ESCAPE to start new game", True, TEXT_COLOR)
+    text_rect1 = text1.get_rect()
+    text_rect2 = text2.get_rect()
+    text_rect1.center = (WIDTH // 2, HEIGHT // 2 - 30)
+    text_rect2.center = (WIDTH // 2, HEIGHT // 2)
+    screen.blit(text1, text_rect1)
+    screen.blit(text2, text_rect2)
 
 def draw_snake(screen, snake):
     for segment in snake:
@@ -192,9 +210,18 @@ def draw_snake(screen, snake):
         pygame.draw.rect(screen, SNAKE_COLOR, rect, border_radius = SNAKE_RADIUS)
 
 def draw_walls(screen):
-    pass
+    wall_size = WALL_BLOCKS * BLOCK_SIZE
+    pygame.draw.rect(screen, WALL_COLOR, ((0, 0), (WIDTH, wall_size)))
+    pygame.draw.rect(screen, WALL_COLOR, ((0, 0), (wall_size, HEIGHT)))
+    pygame.draw.rect(screen, WALL_COLOR, ((0, HEIGHT - wall_size), (WIDTH, HEIGHT)))
+    pygame.draw.rect(screen, WALL_COLOR, ((WIDTH - wall_size, 0), (WIDTH, HEIGHT)))
 
 def print_score(screen, score):
-    pass
+    font = pygame.font.SysFont("Courier New", 20, bold=True)
+    text = font.render("Score: " + str(score), True, TEXT_COLOR)
+    text_rect = text.get_rect()
+    text_rect.centery = WALL_BLOCKS * BLOCK_SIZE // 2
+    text_rect.x = WALL_BLOCKS * BLOCK_SIZE
+    screen.blit(text, text_rect)
 
 main()
